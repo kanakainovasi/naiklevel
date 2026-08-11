@@ -1,0 +1,384 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap');
+
+/* ==============================================================================
+   Naik Level — Design Tokens & CSS Variables
+   ============================================================================== */
+:root {
+  /* Fonts */
+  --font-heading: 'Nunito', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Color Palette — Playful Blue, Red, Pink, Pastel Theme */
+  --color-primary-blue: hsl(210, 100%, 50%);
+  --color-primary-blue-hover: hsl(210, 100%, 42%);
+  --color-primary-blue-soft: hsl(210, 100%, 95%);
+  
+  --color-primary-red: hsl(354, 85%, 56%);
+  --color-primary-red-hover: hsl(354, 85%, 48%);
+  --color-primary-red-soft: hsl(354, 100%, 96%);
+
+  --color-accent-pink: hsl(330, 85%, 65%);
+  --color-accent-pink-hover: hsl(330, 85%, 58%);
+  --color-accent-pink-soft: hsl(330, 100%, 96%);
+
+  --color-accent-yellow: hsl(45, 100%, 55%);
+  --color-accent-yellow-hover: hsl(45, 100%, 48%);
+  --color-accent-yellow-soft: hsl(45, 100%, 95%);
+
+  --color-accent-green: hsl(142, 70%, 45%);
+  --color-accent-green-hover: hsl(142, 70%, 38%);
+  --color-accent-green-soft: hsl(142, 70%, 95%);
+
+  /* Neutrals */
+  --color-bg-main: hsl(210, 40%, 98%);
+  --color-bg-card: hsl(0, 0%, 100%);
+  --color-text-main: hsl(220, 40%, 20%);
+  --color-text-muted: hsl(220, 15%, 50%);
+  --color-border: hsl(210, 30%, 90%);
+
+  /* UI Styling properties */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.02);
+  --shadow-lg: 0 16px 32px rgba(220, 225, 235, 0.4), 0 4px 12px rgba(0, 0, 0, 0.02);
+  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+
+  --transition-normal: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bouncy: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Dark mode overrides (mainly for Parent Dashboard helper styling) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg-main: hsl(220, 30%, 12%);
+    --color-bg-card: hsl(220, 30%, 16%);
+    --color-text-main: hsl(210, 20%, 95%);
+    --color-text-muted: hsl(210, 10%, 70%);
+    --color-border: hsl(220, 30%, 24%);
+    --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.4);
+    --color-primary-blue-soft: hsl(210, 80%, 20%);
+    --color-primary-red-soft: hsl(354, 80%, 20%);
+    --color-accent-pink-soft: hsl(330, 80%, 20%);
+    --color-accent-yellow-soft: hsl(45, 80%, 20%);
+    --color-accent-green-soft: hsl(142, 80%, 18%);
+  }
+}
+
+/* ==============================================================================
+   Base Resets & Styles
+   ============================================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-bg-main);
+  color: var(--color-text-main);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  color: var(--color-text-main);
+  line-height: 1.25;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: var(--transition-normal);
+}
+
+/* ==============================================================================
+   Helper Classes & Layout Utilities (Vanilla CSS)
+   ============================================================================== */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.flex-wrap { flex-wrap: wrap; }
+.gap-1 { gap: 4px; }
+.gap-2 { gap: 8px; }
+.gap-4 { gap: 16px; }
+.gap-6 { gap: 24px; }
+.gap-8 { gap: 32px; }
+
+.grid {
+  display: grid;
+}
+.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+@media (max-width: 768px) {
+  .grid-cols-2, .grid-cols-3, .grid-cols-4 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+/* Typography sizes */
+.text-center { text-align: center; }
+.text-xs { font-size: 12px; }
+.text-sm { font-size: 14px; }
+.text-base { font-size: 16px; }
+.text-lg { font-size: 18px; }
+.text-xl { font-size: 20px; }
+.text-2xl { font-size: 24px; }
+.text-3xl { font-size: 32px; }
+.font-bold { font-weight: 700; }
+.font-extrabold { font-weight: 900; }
+
+/* Spacing helpers */
+.m-0 { margin: 0; }
+.mt-2 { margin-top: 8px; }
+.mt-4 { margin-top: 16px; }
+.mt-6 { margin-top: 24px; }
+.mt-8 { margin-top: 32px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-4 { margin-bottom: 16px; }
+.mb-6 { margin-bottom: 24px; }
+.mb-8 { margin-bottom: 32px; }
+
+.p-4 { padding: 16px; }
+.p-6 { padding: 24px; }
+.p-8 { padding: 32px; }
+.py-4 { padding-top: 16px; padding-bottom: 16px; }
+.py-8 { padding-top: 32px; padding-bottom: 32px; }
+.py-12 { padding-top: 48px; padding-bottom: 48px; }
+.py-16 { padding-top: 64px; padding-bottom: 64px; }
+.px-4 { padding-left: 16px; padding-right: 16px; }
+.px-6 { padding-left: 24px; padding-right: 24px; }
+
+/* ==============================================================================
+   Components
+   ============================================================================== */
+
+/* Playful Card (Bouncy Hover) */
+.card {
+  background-color: var(--color-bg-card);
+  border: 3px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-bouncy);
+  position: relative;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary-blue);
+}
+
+.card-blue { border-color: var(--color-primary-blue-soft); }
+.card-blue:hover { border-color: var(--color-primary-blue); }
+.card-red { border-color: var(--color-primary-red-soft); }
+.card-red:hover { border-color: var(--color-primary-red); }
+.card-pink { border-color: var(--color-accent-pink-soft); }
+.card-pink:hover { border-color: var(--color-accent-pink); }
+.card-yellow { border-color: var(--color-accent-yellow-soft); }
+.card-yellow:hover { border-color: var(--color-accent-yellow); }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 16px;
+  padding: 12px 28px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition-bouncy);
+  user-select: none;
+  outline: none;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+  background-color: var(--color-primary-blue);
+  color: white;
+}
+.btn-primary:hover {
+  background-color: var(--color-primary-blue-hover);
+  transform: scale(1.03);
+}
+
+.btn-secondary {
+  background-color: var(--color-primary-red);
+  color: white;
+}
+.btn-secondary:hover {
+  background-color: var(--color-primary-red-hover);
+  transform: scale(1.03);
+}
+
+.btn-pink {
+  background-color: var(--color-accent-pink);
+  color: white;
+}
+.btn-pink:hover {
+  background-color: var(--color-accent-pink-hover);
+  transform: scale(1.03);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--color-text-main);
+  border: 3px solid var(--color-border);
+  box-shadow: none;
+}
+.btn-outline:hover {
+  border-color: var(--color-primary-blue);
+  background-color: var(--color-primary-blue-soft);
+}
+
+/* Form Inputs */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.form-label {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--color-text-main);
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  border: 3px solid var(--color-border);
+  background-color: var(--color-bg-card);
+  color: var(--color-text-main);
+  font-family: var(--font-body);
+  font-size: 15px;
+  outline: none;
+  transition: var(--transition-normal);
+}
+
+.form-input:focus {
+  border-color: var(--color-primary-blue);
+  box-shadow: 0 0 0 4px var(--color-primary-blue-soft);
+}
+
+/* Profile Selector Cards */
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  border: 3px dashed var(--color-border);
+  cursor: pointer;
+  transition: var(--transition-bouncy);
+  background-color: var(--color-bg-card);
+  min-width: 120px;
+}
+
+.profile-card:hover {
+  transform: scale(1.05);
+  border-color: var(--color-primary-blue);
+  border-style: solid;
+}
+
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background-color: var(--color-primary-blue-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin-bottom: 12px;
+  border: 3px solid transparent;
+  transition: var(--transition-normal);
+}
+
+.profile-card:hover .profile-avatar {
+  border-color: var(--color-primary-blue);
+  background-color: white;
+}
+
+/* Header/Footer Styles */
+.header {
+  background-color: var(--color-bg-card);
+  border-bottom: 3px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 16px 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.logo-text {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-naik {
+  color: var(--color-primary-red);
+}
+
+.logo-level {
+  color: var(--color-primary-blue);
+}
+
+/* Animations */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.animate-bounce {
+  animation: bounce 2s infinite ease-in-out;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
