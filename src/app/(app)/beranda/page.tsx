@@ -6,7 +6,7 @@ import { Database } from '@/types/database'
 
 export const revalidate = 0
 
-async function getChildDashboardData() {
+async function getChildDashboardData(urlChildId?: string) {
   const cookieStore = await cookies()
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -44,13 +44,22 @@ async function getChildDashboardData() {
     .select('*')
     .eq('parent_id', user.id)
 
-  const activeChildId = cookieStore.get('active_child_id')?.value
+  const cookieChildId = cookieStore.get('active_child_id')?.value
+  const targetChildId = urlChildId || cookieChildId
 
-  let activeChild = childrenList?.find((c) => c.id === activeChildId) || childrenList?.[0] || null
+  let activeChild = childrenList?.find((c) => c.id === targetChildId) || childrenList?.[0] || null
 
   // If no child profile exists, redirect to setup page
   if (!activeChild) {
     redirect('/profil/setup')
+  }
+
+  // Update active child cookie if it switched
+  if (activeChild.id !== cookieChildId) {
+    cookieStore.set('active_child_id', activeChild.id, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+    })
   }
 
   // Get active education level
@@ -93,8 +102,13 @@ async function getChildDashboardData() {
   }
 }
 
-export default async function BerandaPage() {
-  const data = await getChildDashboardData()
+interface Props {
+  searchParams: Promise<{ childId?: string }>
+}
+
+export default async function BerandaPage({ searchParams }: Props) {
+  const resolvedSearchParams = await searchParams
+  const data = await getChildDashboardData(resolvedSearchParams.childId)
   const { activeChild, childrenList, subjects, earnedBadges } = data
 
   const currentXp = activeChild.xp_total || 0
