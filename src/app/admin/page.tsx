@@ -71,13 +71,47 @@ export default async function AdminDashboardPage() {
   return (
     <div>
       {/* Header */}
-      <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
-          📊 Analitik Traffic & Status Platform
-        </h1>
-        <p style={{ color: '#64748b', marginTop: '6px', fontSize: '15px' }}>
-          Pantau statistik aktivitas pengunjung, progres pembuatan soal, dan metrik aplikasi Naik Level.
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '28px' }}>
+        <div>
+          <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+            📊 Analitik Traffic & Status Platform
+          </h1>
+          <p style={{ color: '#64748b', marginTop: '6px', fontSize: '15px' }}>
+            Pantau statistik aktivitas pengunjung, progres pembuatan soal, dan metrik aplikasi Naik Level.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <Link
+            href="/admin/soal"
+            style={{
+              padding: '10px 18px',
+              backgroundColor: '#0284c7',
+              color: 'white',
+              borderRadius: '10px',
+              textDecoration: 'none',
+              fontSize: '14px',
+              fontWeight: '700',
+            }}
+          >
+            📝 Kelola & Tambah/Hapus Soal
+          </Link>
+
+          <Link
+            href="/admin/feedback"
+            style={{
+              padding: '10px 18px',
+              backgroundColor: '#059669',
+              color: 'white',
+              borderRadius: '10px',
+              textDecoration: 'none',
+              fontSize: '14px',
+              fontWeight: '700',
+            }}
+          >
+            📩 Inbox Saran & Komplain
+          </Link>
+        </div>
       </div>
 
       {/* Grid Stat Cards */}

@@ -459,6 +459,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_feedback: {
+        Row: {
+          id: string
+          parent_id: string | null
+          category: 'saran' | 'komplain' | 'pertanyaan' | 'lainnya'
+          subject: string
+          message: string
+          contact_email: string | null
+          status: 'unread' | 'read' | 'resolved' | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          parent_id?: string | null
+          category: 'saran' | 'komplain' | 'pertanyaan' | 'lainnya'
+          subject: string
+          message: string
+          contact_email?: string | null
+          status?: 'unread' | 'read' | 'resolved' | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          parent_id?: string | null
+          category?: 'saran' | 'komplain' | 'pertanyaan' | 'lainnya'
+          subject?: string
+          message?: string
+          contact_email?: string | null
+          status?: 'unread' | 'read' | 'resolved' | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -40,6 +40,9 @@ export default function AppLayout({
             <Link href="/olimpiade" style={{ fontSize: '15px', fontWeight: '700', color: '#d97706', textDecoration: 'none' }}>
               🏆 Olimpiade
             </Link>
+            <Link href="/game/ular-tangga" style={{ fontSize: '15px', fontWeight: '700', color: '#059669', textDecoration: 'none' }}>
+              🎲 Game
+            </Link>
             <Link href="/karya" style={{ fontSize: '15px', fontWeight: '700', color: '#be185d', textDecoration: 'none' }}>
               🎨 Karya
             </Link>
