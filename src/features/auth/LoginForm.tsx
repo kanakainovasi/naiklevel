@@ -35,9 +35,14 @@ export function LoginForm() {
       </div>
 
       <div className="form-group">
-        <label className="form-label" htmlFor="password">
-          Password
-        </label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <label className="form-label" htmlFor="password">
+            Password
+          </label>
+          <Link href="/lupa-password" style={{ fontSize: '12px', color: 'var(--color-primary-blue)', fontWeight: 'bold', textDecoration: 'none' }}>
+            Lupa Password?
+          </Link>
+        </div>
         <input
           id="password"
           name="password"

@@ -5,6 +5,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Database } from '@/types/database'
+import ChangePasswordForm from './ChangePasswordForm'
 
 export default function PengaturanProfilPage() {
   const router = useRouter()
@@ -223,6 +224,9 @@ export default function PengaturanProfilPage() {
           dengan menghubungi tim kami.
         </p>
       </div>
+
+      {/* Change Password Form */}
+      <ChangePasswordForm />
     </div>
   )
 }
