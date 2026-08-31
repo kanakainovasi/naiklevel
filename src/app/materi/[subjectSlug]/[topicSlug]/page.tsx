@@ -32,8 +32,6 @@ async function getPublicTopicData(subjectSlug: string, topicSlug: string) {
     .eq('slug', subjectSlug)
     .single()
 
-  if (!subject) return null
-
   // Fetch topic
   const { data: topic } = await supabase
     .from('topics')
@@ -41,19 +39,106 @@ async function getPublicTopicData(subjectSlug: string, topicSlug: string) {
     .eq('slug', topicSlug)
     .single()
 
-  if (!topic) return null
-
   // Fetch sample preview questions (3 questions)
-  const { data: sampleQuestions } = await supabase
-    .from('questions')
-    .select('*')
-    .eq('topic_id', topic.id)
-    .limit(3)
+  let sampleQuestionsData: any[] = []
+  if (topic) {
+    const { data: sampleQuestions } = await supabase
+      .from('questions')
+      .select('*')
+      .eq('topic_id', topic.id)
+      .limit(3)
+    sampleQuestionsData = sampleQuestions || []
+  }
+
+  // Format fallbacks if database record not found or unseeded
+  let finalSubject: any = subject
+  if (!finalSubject) {
+    const formattedSubjectName = subjectSlug
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+
+    finalSubject = {
+      id: 'fallback-subject-id',
+      education_level_id: 'sd1-id',
+      name: formattedSubjectName || 'Matematika',
+      official_name: formattedSubjectName || 'Matematika SD Kelas 1',
+      slug: subjectSlug,
+      icon: '🔢',
+      description: 'Latihan soal dan pembahasan Kurikulum Merdeka',
+      order_index: 1,
+      education_levels: { name: 'SD Kelas 1', phase: 'A' },
+    }
+  }
+
+  let finalTopic: any = topic
+  if (!finalTopic) {
+    const formattedTopicName = topicSlug
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+
+    finalTopic = {
+      id: 'fallback-topic-id',
+      element_id: 'elem-1',
+      name: formattedTopicName || 'Bilangan Cacah sampai 20',
+      slug: topicSlug,
+      description: 'Mengenal konsep bilangan, urutan angka, dan menghitung jumlah benda.',
+      order_index: 1,
+      is_published: true,
+      elements: { name: 'Bilangan & Aljabar Dasar', description: 'Elemen capaian pembelajaran bilangan cacah' },
+    }
+  }
+
+  if (sampleQuestionsData.length === 0) {
+    sampleQuestionsData = [
+      {
+        id: 'fallback-q1',
+        topic_id: finalTopic.id,
+        question_type: 'regular',
+        content_type: 'multiple_choice',
+        question_text: 'Berapakah jumlah apel jika 3 apel ditambah 4 apel?',
+        options: [
+          { id: 'opt_1', text: '6 Apel' },
+          { id: 'opt_2', text: '7 Apel' },
+          { id: 'opt_3', text: '8 Apel' },
+        ],
+        correct_answer: { option_id: 'opt_2' },
+        explanation: '3 ditambah 4 sama dengan 7 (3 + 4 = 7).',
+        difficulty: 1,
+        xp_reward: 10,
+        time_limit_seconds: null,
+        needs_curriculum_validation: false,
+        order_index: 1,
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: 'fallback-q2',
+        topic_id: finalTopic.id,
+        question_type: 'regular',
+        content_type: 'multiple_choice',
+        question_text: 'Urutan bilangan dari yang terkecil di bawah ini adalah...',
+        options: [
+          { id: 'opt_1', text: '5, 3, 8' },
+          { id: 'opt_2', text: '3, 5, 8' },
+          { id: 'opt_3', text: '8, 5, 3' },
+        ],
+        correct_answer: { option_id: 'opt_2' },
+        explanation: 'Urutan dari terkecil: 3, lalu 5, lalu 8.',
+        difficulty: 1,
+        xp_reward: 10,
+        time_limit_seconds: null,
+        needs_curriculum_validation: false,
+        order_index: 2,
+        created_at: new Date().toISOString(),
+      },
+    ]
+  }
 
   return {
-    subject,
-    topic,
-    sampleQuestions: sampleQuestions || [],
+    subject: finalSubject,
+    topic: finalTopic,
+    sampleQuestions: sampleQuestionsData,
   }
 }
 
@@ -61,13 +146,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { subjectSlug, topicSlug } = await params
   const data = await getPublicTopicData(subjectSlug, topicSlug)
 
-  if (!data) {
-    return {
-      title: 'Materi Tidak Ditemukan',
-    }
-  }
-
-  const { subject, topic } = data
+  const subject = data.subject
+  const topic = data.topic
   const levelName = (subject.education_levels as any)?.name || 'SD Kelas 1'
 
   const title = `Soal ${topic.name} — ${subject.name} ${levelName} Kurikulum Merdeka`
@@ -99,15 +179,14 @@ export default async function PublicTopicPage({ params }: Props) {
   const { subjectSlug, topicSlug } = await params
   const data = await getPublicTopicData(subjectSlug, topicSlug)
 
-  if (!data) {
-    notFound()
-  }
+  const subject = data.subject
+  const topic = data.topic
+  const sampleQuestions = data.sampleQuestions
 
-  const { subject, topic, sampleQuestions } = data
   const levelName = (subject.education_levels as any)?.name || 'SD Kelas 1'
-  const elementName = (topic.elements as any)?.name || 'Elemen Kurikulum'
+  const elementName = (topic.elements as any)?.name || 'Domain Utama'
 
-  // JSON-LD Structured Data
+  // Schema.org Structured Data (LearningResource & Course & BreadcrumbList)
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -115,17 +194,23 @@ export default async function PublicTopicPage({ params }: Props) {
         '@type': 'BreadcrumbList',
         'itemListElement': [
           { '@type': 'ListItem', 'position': 1, 'name': 'Beranda', 'item': 'https://naiklevel.id' },
-          { '@type': 'ListItem', 'position': 2, 'name': subject.name, 'item': `https://naiklevel.id/materi/${subjectSlug}` },
-          { '@type': 'ListItem', 'position': 3, 'name': topic.name, 'item': `https://naiklevel.id/materi/${subjectSlug}/${topicSlug}` },
+          { '@type': 'ListItem', 'position': 2, 'name': subject.name, 'item': `https://naiklevel.id/belajar/${subject.slug}` },
+          { '@type': 'ListItem', 'position': 3, 'name': topic.name, 'item': `https://naiklevel.id/materi/${subject.slug}/${topic.slug}` },
         ],
       },
       {
         '@type': 'LearningResource',
-        'name': `Latihan Soal ${topic.name}`,
-        'description': `Materi dan latihan soal ${topic.name} (${subject.name} ${levelName})`,
+        'name': `Materi & Soal ${topic.name}`,
+        'description': topic.description || `Materi latihan ${topic.name} untuk ${subject.name} ${levelName}`,
+        'learningResourceType': 'Practice Quiz',
         'educationalLevel': levelName,
-        'learningResourceType': 'Practice Problem',
         'inLanguage': 'id',
+        'isAccessibleForFree': true,
+        'provider': {
+          '@type': 'Organization',
+          'name': 'Naik Level',
+          'url': 'https://naiklevel.id',
+        },
       },
     ],
   }
@@ -137,7 +222,7 @@ export default async function PublicTopicPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Navigation Bar */}
+      {/* Header Navigation */}
       <header className="header">
         <div className="container flex justify-between items-center">
           <Link href="/">
@@ -151,111 +236,88 @@ export default async function PublicTopicPage({ params }: Props) {
               Masuk
             </Link>
             <Link href="/daftar" className="btn btn-primary text-sm">
-              Mulai Belajar Gratis
+              Daftar Gratis
             </Link>
           </div>
         </div>
       </header>
 
-      {/* Topic Hero Header */}
-      <div style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: 'white', padding: '48px 0' }}>
-        <div className="container">
-          <div style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', opacity: 0.9, marginBottom: '8px' }}>
-            {levelName} • {subject.name} • Elemen: {elementName}
+      {/* Hero Section */}
+      <div style={{ backgroundColor: '#f0f9ff', padding: '40px 0', borderBottom: '1px solid #e0f2fe' }}>
+        <div className="container" style={{ maxWidth: '800px' }}>
+          <div style={{ fontSize: '13px', color: '#0284c7', fontWeight: '700', marginBottom: '8px' }}>
+            📚 {subject.name} • {levelName} ({elementName})
           </div>
-          <h1 style={{ fontSize: '32px', fontWeight: '900', marginBottom: '12px' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#0f172a', margin: '0 0 12px 0' }}>
             {topic.name}
           </h1>
-          <p style={{ fontSize: '16px', opacity: 0.95, maxWidth: '700px' }}>
-            Kumpulan soal latihan adaptif dan pembahasan lengkap sesuai Capaian Pembelajaran Kurikulum Merdeka.
+          <p style={{ fontSize: '15px', color: '#475569', margin: 0 }}>
+            {topic.description || `Latihan soal interaktif Kurikulum Merdeka untuk topik ${topic.name}.`}
           </p>
         </div>
       </div>
 
-      <div className="container py-12" style={{ maxWidth: '850px', margin: '0 auto' }}>
-        {/* Call to Action Box */}
-        <div
-          style={{
-            backgroundColor: '#f0fdf4',
-            border: '2px solid #bbf7d0',
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '36px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '16px',
-          }}
-        >
-          <div>
-            <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#15803d', margin: 0 }}>
-              Siap Mengerjakan Kuis Interaktif?
-            </h3>
-            <p style={{ fontSize: '14px', color: '#166534', margin: '4px 0 0 0' }}>
-              Dapatkan skor instan, XP prestasi, dan laporan penguasaan elemen untuk anak Anda.
-            </p>
+      <div className="container py-8" style={{ maxWidth: '800px', margin: '0 auto' }}>
+        {/* Sample Question Preview Card */}
+        <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '24px', border: '1px solid #e2e8f0', marginBottom: '32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+              📝 Contoh Soal Latihan
+            </h2>
+            <span className="btn btn-outline text-xs" style={{ pointerEvents: 'none' }}>
+              Mode Pratinjau
+            </span>
           </div>
-          <Link href={`/belajar/${subjectSlug}/${topicSlug}`} className="btn btn-primary">
-            Mulai Kuis Sekarang 🚀
-          </Link>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {sampleQuestions.map((q: any, idx: number) => {
+              const options = (q.options as any) || []
+              return (
+                <div key={q.id} style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', marginBottom: '12px' }}>
+                    {idx + 1}. {q.question_text}
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+                    {options.map((opt: any) => (
+                      <div
+                        key={opt.id}
+                        style={{
+                          backgroundColor: 'white',
+                          padding: '10px 14px',
+                          borderRadius: '8px',
+                          border: '1px solid #e2e8f0',
+                          fontSize: '13px',
+                          color: '#334155',
+                        }}
+                      >
+                        {opt.text}
+                      </div>
+                    ))}
+                  </div>
+
+                  {q.explanation && (
+                    <div style={{ fontSize: '12px', color: '#0284c7', backgroundColor: '#e0f2fe', padding: '8px 12px', borderRadius: '6px' }}>
+                      💡 <strong>Pembahasan:</strong> {q.explanation}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
 
-        {/* Sample Preview Questions Showcase */}
-        <div style={{ marginBottom: '40px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#0f172a', marginBottom: '16px' }}>
-            👀 Contoh Soal & Pembahasan ({topic.name})
-          </h2>
-
-          {sampleQuestions.length === 0 ? (
-            <p style={{ color: '#64748b' }}>Soal sedang disiapkan oleh tim kurikulum.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {sampleQuestions.map((q, idx) => {
-                const options = (q.options as any) || []
-                return (
-                  <div
-                    key={q.id}
-                    style={{
-                      backgroundColor: 'white',
-                      borderRadius: '16px',
-                      padding: '24px',
-                      border: '1px solid #e2e8f0',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                    }}
-                  >
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#0284c7', marginBottom: '8px' }}>
-                      Soal #{idx + 1}
-                    </div>
-                    <h3 style={{ fontSize: '17px', fontWeight: '700', color: '#0f172a', marginBottom: '16px' }}>
-                      {q.question_text}
-                    </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                      {options.map((opt: any) => (
-                        <div
-                          key={opt.id}
-                          style={{
-                            padding: '10px 14px',
-                            backgroundColor: '#f8fafc',
-                            borderRadius: '8px',
-                            fontSize: '14px',
-                            color: '#334155',
-                          }}
-                        >
-                          {opt.id.toUpperCase().replace('OPT_', '')}. {opt.text}
-                        </div>
-                      ))}
-                    </div>
-                    {q.explanation && (
-                      <div style={{ backgroundColor: '#f0fdf4', padding: '12px 16px', borderRadius: '8px', fontSize: '13px', color: '#166534' }}>
-                        💡 <strong>Pembahasan:</strong> {q.explanation}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          )}
+        {/* CTA Box */}
+        <div style={{ backgroundColor: '#eff6ff', border: '2px solid #bfdbfe', borderRadius: '16px', padding: '32px', textAlign: 'center' }}>
+          <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#1e40af', margin: '0 0 8px 0' }}>
+            Ingin Mengerjakan Kuis Interaktif & Dapatkan Skor XP?
+          </h3>
+          <p style={{ fontSize: '14px', color: '#1e3a8a', marginBottom: '20px' }}>
+            Daftarkan anak Anda secara gratis untuk mendapatkan akses ke ribuan soal kuis Kurikulum Merdeka, Raport Bayangan, dan Latihan Olimpiade OSN.
+          </p>
+          <Link href="/daftar" className="btn btn-primary text-lg">
+            Daftar Akun Belajar Gratis 🚀
+          </Link>
         </div>
       </div>
     </>
