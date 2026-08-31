@@ -25,6 +25,17 @@ export default function QuizEngine({
 }: Props) {
   const supabase = createClient()
 
+  // Randomize questions order and pick up to 10 questions per quiz session
+  const [shuffledQuestions] = useState<Question[]>(() => {
+    if (!questions || questions.length === 0) return []
+    const arr = [...questions]
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]]
+    }
+    return arr.slice(0, 10)
+  })
+
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
   const [isAnswered, setIsAnswered] = useState(false)
@@ -33,7 +44,7 @@ export default function QuizEngine({
   const [totalXpEarned, setTotalXpEarned] = useState(0)
   const [isCompleted, setIsCompleted] = useState(false)
 
-  const currentQuestion = questions[currentIndex]
+  const currentQuestion = shuffledQuestions[currentIndex]
 
   if (!currentQuestion && !isCompleted) {
     return (
@@ -65,7 +76,7 @@ export default function QuizEngine({
   }
 
   const handleNextQuestion = () => {
-    if (currentIndex + 1 < questions.length) {
+    if (currentIndex + 1 < shuffledQuestions.length) {
       setCurrentIndex((prev) => prev + 1)
       setSelectedOptionId(null)
       setIsAnswered(false)
@@ -78,7 +89,7 @@ export default function QuizEngine({
     setIsCompleted(true)
 
     // Save Quiz Session to Supabase
-    const finalScore = Math.round((correctCount / questions.length) * 100)
+    const finalScore = Math.round((correctCount / shuffledQuestions.length) * 100)
     const { data: session } = await supabase
       .from('quiz_sessions')
       .insert({
@@ -86,7 +97,7 @@ export default function QuizEngine({
         topic_id: topic.id,
         session_type: 'regular',
         score: finalScore,
-        total_questions: questions.length,
+        total_questions: shuffledQuestions.length,
         correct_answers: correctCount,
         xp_earned: totalXpEarned,
       })
@@ -118,7 +129,7 @@ export default function QuizEngine({
 
   // Quiz Results View
   if (isCompleted) {
-    const finalScore = Math.round((correctCount / questions.length) * 100)
+    const finalScore = Math.round((correctCount / shuffledQuestions.length) * 100)
     return (
       <div
         style={{
@@ -163,7 +174,7 @@ export default function QuizEngine({
               {finalScore}%
             </div>
             <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-              {correctCount} dari {questions.length} benar
+              {correctCount} dari {shuffledQuestions.length} benar
             </div>
           </div>
 
@@ -199,7 +210,7 @@ export default function QuizEngine({
   }
 
   // Active Question View
-  const progressPercent = Math.round(((currentIndex + 1) / questions.length) * 100)
+  const progressPercent = Math.round(((currentIndex + 1) / shuffledQuestions.length) * 100)
   const options = (currentQuestion.options as any) || []
 
   return (
@@ -208,7 +219,7 @@ export default function QuizEngine({
       <div style={{ marginBottom: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <span style={{ fontSize: '14px', fontWeight: '700', color: '#0284c7' }}>
-            Soal {currentIndex + 1} dari {questions.length}
+            Soal {currentIndex + 1} dari {shuffledQuestions.length}
           </span>
           <span style={{ fontSize: '14px', fontWeight: '700', color: '#16a34a' }}>
             +{currentQuestion.xp_reward || 10} XP
