@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Database } from '@/types/database'
+import { AudioSpeaker } from '@/components/ui/AudioSpeaker'
 
 type Question = Database['public']['Tables']['questions']['Row']
 type Topic = Database['public']['Tables']['topics']['Row']
@@ -237,9 +238,12 @@ export default function QuizEngine({
           marginBottom: '24px',
         }}
       >
-        <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', lineHeight: '1.5', margin: '0 0 24px 0' }}>
-          {currentQuestion.question_text}
-        </h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', lineHeight: '1.5', margin: 0 }}>
+            {currentQuestion.question_text}
+          </h2>
+          <AudioSpeaker textToSpeak={currentQuestion.question_text} />
+        </div>
 
         {/* Options List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
